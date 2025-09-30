@@ -12,6 +12,7 @@ import (
 var (
 	DatabaseConectionString string = ""
 	Port                           = 0
+	JWT_SECRET                     = ""
 )
 
 func Load() {
@@ -25,6 +26,8 @@ func Load() {
 		log.Fatal(err)
 	}
 
+	JWT_SECRET = os.Getenv("JWT_SECRET")
+
 	DatabaseConectionString = os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@/" + os.Getenv("DB_NAME") + "?charset=utf8&parseTime=True&loc=Local"
 
 	show()
@@ -35,5 +38,6 @@ func show() {
 	fmt.Println("Variaveis de ambiente carregadas com sucesso")
 	fmt.Println("[API_PORT]", Port)
 	fmt.Println("[DB_CONNECTION_STRING]", DatabaseConectionString)
+	fmt.Println("[JWT_SECRET]", JWT_SECRET)
 	fmt.Println("===============================")
 }
