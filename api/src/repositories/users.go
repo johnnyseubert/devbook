@@ -76,7 +76,7 @@ func (repository usersRepository) GetById(id string) (models.User, error) {
 	return user, nil
 }
 
-func (repository usersRepository) Update(id string, user models.User) error {
+func (repository usersRepository) Update(id uint64, user models.User) error {
 	statement, err := repository.db.Prepare("UPDATE users SET name = ?, nick = ?, email = ? WHERE id = ?")
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (repository usersRepository) Update(id string, user models.User) error {
 	return nil
 }
 
-func (repository usersRepository) Delete(id string) error {
+func (repository usersRepository) Delete(id uint64) error {
 	statement, err := repository.db.Prepare("DELETE FROM users WHERE id = ?")
 	if err != nil {
 		return err

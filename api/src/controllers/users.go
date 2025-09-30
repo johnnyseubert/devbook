@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -11,6 +13,7 @@ import (
 	"github.com/johnnyseubert/devbook/src/models"
 	"github.com/johnnyseubert/devbook/src/repositories"
 	"github.com/johnnyseubert/devbook/src/responses"
+	"github.com/johnnyseubert/devbook/src/security"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +95,22 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	parameters := mux.Vars(r)
-	id := parameters["userId"]
+	id, err := strconv.ParseUint(parameters["userId"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, fmt.Errorf("invalid userId"))
+		return
+	}
+
+	userIdToken, err := security.ExcractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if id != userIdToken {
+		responses.Error(w, http.StatusForbidden, fmt.Errorf("you can only update your own user"))
+		return
+	}
 
 	bodyRequest, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -129,7 +147,22 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["userId"]
+	id, err := strconv.ParseUint(mux.Vars(r)["userId"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, fmt.Errorf("invalid userId"))
+		return
+	}
+
+	userIdToken, err := security.ExcractUserId(r)
+	if err != nil {
+		responses.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if id != userIdToken {
+		responses.Error(w, http.StatusForbidden, fmt.Errorf("you can only update your own user"))
+		return
+	}
 
 	db, err := database.Connect()
 	if err != nil {

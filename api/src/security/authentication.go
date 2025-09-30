@@ -2,7 +2,9 @@ package security
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +36,26 @@ func ValidateToken(request *http.Request) error {
 	}
 
 	return errors.New("invalid token")
+}
+
+func ExcractUserId(request *http.Request) (uint64, error) {
+	tokenString := excractToken(request)
+	token, err := jwt.Parse(tokenString, retrieveTokenKey)
+	if err != nil {
+		return 0, err
+	}
+
+	if permissions, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		convertedUserId := fmt.Sprintf("%.0f", permissions["userId"])
+
+		userId, err := strconv.ParseUint(convertedUserId, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return userId, nil
+	}
+
+	return 0, errors.New("invalid token")
 }
 
 func excractToken(request *http.Request) string {
