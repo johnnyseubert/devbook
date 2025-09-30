@@ -90,3 +90,18 @@ func (repository usersRepository) Update(id string, user models.User) error {
 
 	return nil
 }
+
+func (repository usersRepository) Delete(id string) error {
+	statement, err := repository.db.Prepare("DELETE FROM users WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	_, err = statement.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
