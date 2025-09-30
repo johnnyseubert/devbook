@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/johnnyseubert/devbook/src/database"
 	"github.com/johnnyseubert/devbook/src/models"
 	"github.com/johnnyseubert/devbook/src/repositories"
@@ -36,7 +38,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	repository := repositories.NewUsersRepository(db)
+	repository := repositories.UsersRepository(db)
 	userId, err := repository.Create(user)
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
@@ -49,11 +51,43 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("All users"))
+	nameOrNick := strings.ToLower(r.URL.Query().Get("user"))
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.UsersRepository(db)
+	users, err := repository.GetAll(nameOrNick)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.Json(w, http.StatusOK, users)
 }
 
 func GetUserById(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("User by ID"))
+	id := mux.Vars(r)["userId"]
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.UsersRepository(db)
+	user, err := repository.GetById(id)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.Json(w, http.StatusOK, user)
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {

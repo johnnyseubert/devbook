@@ -10,7 +10,7 @@ type usersRepository struct {
 	db *sql.DB
 }
 
-func NewUsersRepository(db *sql.DB) *usersRepository {
+func UsersRepository(db *sql.DB) *usersRepository {
 	return &usersRepository{db: db}
 }
 
@@ -32,4 +32,46 @@ func (repository usersRepository) Create(user models.User) (uint64, error) {
 	}
 
 	return uint64(id), nil
+}
+
+func (repository usersRepository) GetAll(userOrNickname string) ([]models.User, error) {
+	userOrNickname = "%" + userOrNickname + "%"
+
+	rows, err := repository.db.Query("SELECT id, name, nick, email, created_at FROM users WHERE name LIKE ? OR nick LIKE ?", userOrNickname, userOrNickname)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var usersList []models.User
+	for rows.Next() {
+		var user models.User
+
+		err := rows.Scan(&user.ID, &user.Name, &user.Nick, &user.Email, &user.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		usersList = append(usersList, user)
+	}
+
+	return usersList, nil
+}
+
+func (repository usersRepository) GetById(id string) (models.User, error) {
+
+	rows, err := repository.db.Query("SELECT id, name, nick, email, created_at FROM users WHERE id = ?", id)
+	if err != nil {
+		return models.User{}, err
+	}
+	defer rows.Close()
+
+	var user models.User
+	if rows.Next() {
+		err := rows.Scan(&user.ID, &user.Name, &user.Nick, &user.Email, &user.CreatedAt)
+		if err != nil {
+			return models.User{}, err
+		}
+	}
+
+	return user, nil
 }
