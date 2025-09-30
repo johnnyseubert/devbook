@@ -44,8 +44,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, _ := security.GenerateToken(userSavedOnDb.ID)
+	token, err := security.GenerateToken(userSavedOnDb.ID)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
 
 	w.Write([]byte(token))
-
 }
